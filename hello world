@@ -1,0 +1,799 @@
+gaocanyang@gaocanyang-virtual-machine:~/work/x-heep$ make -C util/docker docker-pul
+make: Entering directory '/home/gaocanyang/work/x-heep/util/docker'
+make: *** No rule to make target 'docker-pul'.  Stop.
+make: Leaving directory '/home/gaocanyang/work/x-heep/util/docker'
+gaocanyang@gaocanyang-virtual-machine:~/work/x-heep$ pwd
+/home/gaocanyang/work/x-heep
+gaocanyang@gaocanyang-virtual-machine:~/work/x-heep$ sudo make -C util/docker docker-pull
+[sudo] password for gaocanyang: 
+make: Entering directory '/home/gaocanyang/work/x-heep/util/docker'
+docker pull ghcr.io/x-heep/x-heep/x-heep-toolchain:v1.0.6 || docker pull ghcr.io/x-heep/x-heep/x-heep-toolchain:latest
+v1.0.6: Pulling from x-heep/x-heep/x-heep-toolchain
+Digest: sha256:ee9fb31da90ea550e258110fe1aa4b92a35f2292132cc67d20d39c12b061829b
+Status: Image is up to date for ghcr.io/x-heep/x-heep/x-heep-toolchain:v1.0.6
+ghcr.io/x-heep/x-heep/x-heep-toolchain:v1.0.6
+make: Leaving directory '/home/gaocanyang/work/x-heep/util/docker'
+gaocanyang@gaocanyang-virtual-machine:~/work/x-heep$ sudo make -C util/docker docker-run
+make: Entering directory '/home/gaocanyang/work/x-heep/util/docker'
+docker run -it --rm -v /home/gaocanyang/work/x-heep:/workspace/x-heep ghcr.io/x-heep/x-heep/x-heep-toolchain:v1.0.6
+  
+   @@@@       @@@@              @@@@        @@@@    @@@@@@@@@@@@@@  @@@@@@@@@@@@@@   @@@@@@@@@@     
+    @@@@     @@@@               @@@@        @@@@    @@@@@@@@@@@@@@  @@@@@@@@@@@@@@   @@@@@@@@@@@@@  
+     @@@@   @@@@                @@@@        @@@@    @@@@            @@@@             @@@@      @@@@ 
+      @@@@ @@@@                 @@@@        @@@@    @@@@            @@@@             @@@@       @@@ 
+       @@@@@@@       @@@@@@@    @@@@@@@@@@@@@@@@    @@@@@@@@@@@@@   @@@@@@@@@@@@@    @@@@      @@@@ 
+       @@@@@@@      @@@@@@@@@   @@@@@@@@@@@@@@@@    @@@@@@@@@@@@@   @@@@@@@@@@@@@    @@@@@@@@@@@@@  
+      @@@@ @@@@                 @@@@        @@@@    @@@@            @@@@             @@@@@@@@@@     
+     @@@@   @@@@                @@@@        @@@@    @@@@            @@@@             @@@@           
+    @@@@     @@@@               @@@@        @@@@    @@@@@@@@@@@@@@  @@@@@@@@@@@@@@   @@@@           
+   @@@@       @@@@              @@@@        @@@@    @@@@@@@@@@@@@@  @@@@@@@@@@@@@@   @@@@           
+  
+  
+  Here is a quick start guide to run the `sw/applications/hello_world` example:
+  
+  1. Generate the RTL files: 
+          make mcu-gen
+  2. Build the RTL simulation model: 
+          make verilator-build
+  3. Build an example application to run: 
+          make app PROJECT=hello_world
+  4. Run the RTL simulation: 
+          make verilator-run
+  
+  For more information, please visit: https://x-heep.readthedocs.io/en/latest/index.html
+  
+  Happy HEEPing! :)
+  
+(x-heep) root@76770a445c4b:/workspace/x-heep# verilator --version
+Verilator 5.040 2025-08-30 rev v5.040
+(x-heep) root@76770a445c4b:/workspace/x-heep# make mcu-gen
+$You are executing from: /workspace/x-heep
+USING MINICONDA x-heep
+/opt/conda/envs/x-heep/bin/python util/xheep_gen/mcu_gen.py --config configs/general.hjson --pads_cfg configs/pad_cfg.py --outtpl "./hw/system/pad_ring.sv.tpl ./hw/system/x_heep_system.sv.tpl ./hw/system/pad_control/rtl/pad_control.sv.tpl ./hw/system/pad_control/data/pad_control.hjson.tpl ./hw/ip/soc_ctrl/data/soc_ctrl.hjson.tpl ./hw/ip/pdm2pcm/rtl/pdm_core.sv.tpl ./hw/ip/pdm2pcm/rtl/pdm2pcm.sv.tpl ./hw/ip/pdm2pcm/data/pdm2pcm.hjson.tpl ./hw/ip/power_manager/rtl/power_manager.sv.tpl ./hw/ip/power_manager/data/power_manager.hjson.tpl ./hw/vendor/xheep/spi/rtl/spi_subsystem.sv.tpl ./hw/vendor/xheep/dma/data/xheep_dma.hjson.tpl ./hw/vendor/xheep/dma/data/dma_conf.svh.tpl ./hw/core-v-mini-mcu/cpu_subsystem.sv.tpl ./hw/core-v-mini-mcu/memory_subsystem.sv.tpl ./hw/core-v-mini-mcu/system_xbar.sv.tpl ./hw/core-v-mini-mcu/system_bus.sv.tpl ./hw/core-v-mini-mcu/ao_peripheral_subsystem.sv.tpl ./hw/core-v-mini-mcu/include/core_v_mini_mcu_pkg.sv.tpl ./hw/core-v-mini-mcu/core_v_mini_mcu.sv.tpl ./hw/core-v-mini-mcu/peripheral_subsystem.sv.tpl ./hw/fpga/xheep_fpga_support/constraints/pynq-z2/constraints.xdc.tpl ./hw/fpga/xheep_fpga_support/constraints/pynq-z2/pin_assign.xdc.tpl ./hw/fpga/xheep_fpga_support/rtl/sram_wrapper.sv.tpl ./hw/fpga/xheep_fpga_support/scripts/zcu104/generate_sram.tcl.tpl ./hw/fpga/xheep_fpga_support/scripts/generate_sram.tcl.tpl ./hw/fpga/xheep_fpga_support/scripts/genesys2/generate_sram.tcl.tpl ./hw/fpga/xheep_fpga_support/scripts/pynq-z2/generate_sram.tcl.tpl ./hw/fpga/xheep_fpga_support/scripts/nexys/generate_sram.tcl.tpl ./hw/fpga/xheep_fpga_support/scripts/zcu102/generate_sram.tcl.tpl ./hw/fpga/xheep_fpga_support/scripts/vpk180/generate_sram.tcl.tpl ./hw/fpga/xheep_fpga_support/scripts/aup-zu3/generate_sram.tcl.tpl ./tb/tb_util.svh.tpl ./tb/testharness.sv.tpl ./tb/ext_bus.sv.tpl ./tb/testharness_pkg.sv.tpl ./util/profile/run_profile.sh.tpl ./sw/device/lib/crt/crt0.S.tpl ./sw/device/lib/runtime/core_v_mini_mcu.h.tpl ./sw/device/lib/runtime/core_v_mini_mcu_memory.h.tpl ./sw/linker/link_flash_load.ld.tpl ./sw/linker/link.ld.tpl ./scripts/pnr/core-v-mini-mcu.dc.upf.tpl ./scripts/pnr/core-v-mini-mcu.upf.tpl" --externaltpl "" --cpu  --bus  --memorybanks  --memorybanks_il 
+[MCU-GEN] Generating X-HEEP configuration...
+Idx | Name                         | IO cell             | Bondpad             | # pins | Pins
+0   |clk                           | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | clk
+1   |rst                           | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | rst
+2   |boot_select                   | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | boot_select
+3   |jtag_tck                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | jtag_tck
+4   |jtag_tms                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | jtag_tms
+5   |jtag_trst                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | jtag_trst
+6   |jtag_tdi                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | jtag_tdi
+7   |jtag_tdo                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | jtag_tdo
+8   |uart_rx                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | uart_rx
+9   |uart_tx                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | uart_tx
+10  |exit_valid                    | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | exit_valid
+11  |ddr_rcv_clk                   | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | ddr_rcv_clk
+12  |ddr_snd_clk                   | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | ddr_snd_clk
+13  |gpio_0                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | gpio_0
+14  |gpio_1                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_1, ddr_rcv_0
+15  |gpio_2                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_2, ddr_rcv_1
+16  |gpio_3                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_3, ddr_rcv_2
+17  |gpio_4                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | gpio_4
+18  |gpio_5                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | gpio_5
+19  |gpio_6                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_6, ddr_rcv_3
+20  |gpio_7                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_7, ddr_snd_0
+21  |gpio_8                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_8, ddr_snd_1
+22  |gpio_9                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_9, ddr_snd_2
+23  |gpio_10                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | gpio_10, ddr_snd_3
+24  |gpio_11                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | gpio_11
+25  |gpio_12                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | gpio_12
+26  |spi_flash_sck                 | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_flash_sck
+27  |spi_flash_cs_0                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_flash_cs_0
+28  |spi_flash_cs_1                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_flash_cs_1
+29  |spi_flash_sd_0                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_flash_sd_0
+30  |spi_flash_sd_1                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_flash_sd_1
+31  |spi_flash_sd_2                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_flash_sd_2
+32  |spi_flash_sd_3                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_flash_sd_3
+33  |spi_sck                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_sck
+34  |spi_cs_0                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_cs_0
+35  |spi_cs_1                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_cs_1
+36  |spi_sd_0                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_sd_0
+37  |spi_sd_1                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_sd_1
+38  |spi_sd_2                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_sd_2
+39  |spi_sd_3                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 1      | spi_sd_3
+40  |spi_slave_sck                 | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi_slave_sck, gpio_13
+41  |spi_slave_cs                  | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi_slave_cs, gpio_14
+42  |spi_slave_miso                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi_slave_miso, gpio_15
+43  |spi_slave_mosi                | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi_slave_mosi, gpio_16
+44  |pdm2pcm_pdm                   | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | pdm2pcm_pdm, gpio_17
+45  |pdm2pcm_clk                   | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | pdm2pcm_clk, gpio_18
+46  |i2s_sck                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | i2s_sck, gpio_19
+47  |i2s_ws                        | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | i2s_ws, gpio_20
+48  |i2s_sd_rx                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | i2s_sd_rx, gpio_21
+49  |i2s_sd_tx                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | i2s_sd_tx, gpio_22
+50  |spi2_cs_0                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi2_cs_0, gpio_23
+51  |spi2_cs_1                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi2_cs_1, gpio_24
+52  |spi2_sck                      | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi2_sck, gpio_25
+53  |spi2_sd_0                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi2_sd_0, gpio_26
+54  |spi2_sd_1                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi2_sd_1, gpio_27
+55  |spi2_sd_2                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi2_sd_2, gpio_28
+56  |spi2_sd_3                     | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | spi2_sd_3, gpio_29
+57  |i2c_scl                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | i2c_scl, gpio_31
+58  |i2c_sda                       | IOCELL_DIGITAL      | BONDPAD_DIGITAL     | 2      | i2c_sda, gpio_30
+[MCU-GEN] X-HEEP configuration generated successfully
+[MCU-GEN] Processing 44 templates...
+[MCU-GEN] [1/44] pad_ring.sv.tpl → pad_ring.sv
+[MCU-GEN] [2/44] x_heep_system.sv.tpl → x_heep_system.sv
+[MCU-GEN] [3/44] pad_control.sv.tpl → pad_control.sv
+[MCU-GEN] [4/44] pad_control.hjson.tpl → pad_control.hjson
+[MCU-GEN] [5/44] soc_ctrl.hjson.tpl → soc_ctrl.hjson
+[MCU-GEN] [6/44] pdm_core.sv.tpl → pdm_core.sv
+[MCU-GEN] [7/44] pdm2pcm.sv.tpl → pdm2pcm.sv
+[MCU-GEN] [8/44] pdm2pcm.hjson.tpl → pdm2pcm.hjson
+[MCU-GEN] [9/44] power_manager.sv.tpl → power_manager.sv
+[MCU-GEN] [10/44] power_manager.hjson.tpl → power_manager.hjson
+[MCU-GEN] [11/44] spi_subsystem.sv.tpl → spi_subsystem.sv
+[MCU-GEN] [12/44] xheep_dma.hjson.tpl → xheep_dma.hjson
+[MCU-GEN] [13/44] dma_conf.svh.tpl → dma_conf.svh
+[MCU-GEN] [14/44] cpu_subsystem.sv.tpl → cpu_subsystem.sv
+[MCU-GEN] [15/44] memory_subsystem.sv.tpl → memory_subsystem.sv
+[MCU-GEN] [16/44] system_xbar.sv.tpl → system_xbar.sv
+[MCU-GEN] [17/44] system_bus.sv.tpl → system_bus.sv
+[MCU-GEN] [18/44] ao_peripheral_subsystem.sv.tpl → ao_peripheral_subsystem.sv
+[MCU-GEN] [19/44] core_v_mini_mcu_pkg.sv.tpl → core_v_mini_mcu_pkg.sv
+[MCU-GEN] [20/44] core_v_mini_mcu.sv.tpl → core_v_mini_mcu.sv
+[MCU-GEN] [21/44] peripheral_subsystem.sv.tpl → peripheral_subsystem.sv
+[MCU-GEN] [22/44] constraints.xdc.tpl → constraints.xdc
+[MCU-GEN] [23/44] pin_assign.xdc.tpl → pin_assign.xdc
+[MCU-GEN] [24/44] sram_wrapper.sv.tpl → sram_wrapper.sv
+[MCU-GEN] [25/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [26/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [27/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [28/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [29/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [30/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [31/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [32/44] generate_sram.tcl.tpl → generate_sram.tcl
+[MCU-GEN] [33/44] tb_util.svh.tpl → tb_util.svh
+[MCU-GEN] [34/44] testharness.sv.tpl → testharness.sv
+[MCU-GEN] [35/44] ext_bus.sv.tpl → ext_bus.sv
+[MCU-GEN] [36/44] testharness_pkg.sv.tpl → testharness_pkg.sv
+[MCU-GEN] [37/44] run_profile.sh.tpl → run_profile.sh
+[MCU-GEN] [38/44] crt0.S.tpl → crt0.S
+[MCU-GEN] [39/44] core_v_mini_mcu.h.tpl → core_v_mini_mcu.h
+[MCU-GEN] [40/44] core_v_mini_mcu_memory.h.tpl → core_v_mini_mcu_memory.h
+[MCU-GEN] [41/44] link_flash_load.ld.tpl → link_flash_load.ld
+[MCU-GEN] [42/44] link.ld.tpl → link.ld
+[MCU-GEN] [43/44] core-v-mini-mcu.dc.upf.tpl → core-v-mini-mcu.dc.upf
+[MCU-GEN] [44/44] core-v-mini-mcu.upf.tpl → core-v-mini-mcu.upf
+[MCU-GEN] All templates processed successfully
+### MCU-GEN completed! Running FuseSoC register generators...
+/opt/conda/envs/x-heep/bin/fusesoc --cores-root . run --target=sim --tool=verilator  --setup openhwgroup.org:systems:core-v-mini-mcu
+WARNING: Unknown item cache_type in section Generators
+WARNING: Unknown item cache_type in section Generators
+WARNING: Unknown item formal in section Target
+WARNING: Unknown item formal in section Target
+WARNING: Unknown item formal in section Target
+INFO: Preparing example:ip:gpio_cnt:0
+INFO: Preparing example:ip:i2s_microphone:0
+INFO: Preparing example:ip:pdm2pcm_dummy:0
+INFO: Preparing example:ip:simple_accelerator:0
+INFO: Preparing lowrisc:constants:top_pkg:0
+INFO: Preparing lowrisc:dv_dpi:uartdpi:0.1
+INFO: Preparing lowrisc:dv:dv_fcov_macros:0
+INFO: Preparing lowrisc:ip:spi_device_pkg:0.1
+INFO: Preparing lowrisc:lint:common:0.1
+INFO: Preparing lowrisc:lint:comportable:0.1
+INFO: Preparing lowrisc:prim:assert:0.1
+INFO: Preparing lowrisc:prim:primgen:0.1
+INFO: Preparing lowrisc:prim:ram_1p_pkg:0
+INFO: Preparing lowrisc:prim:secded:0.1
+INFO: Preparing lowrisc:prim:util:0.1
+INFO: Preparing openhwgroup.org:ip:cv32e40x:0
+INFO: Preparing openhwgroup:cve2:cve2_clock_gate:0.1
+INFO: Preparing openhwgroup:cve2:cve2_pkg:0.1
+INFO: Preparing pulp-platform.org::common_cells:1.38.0
+INFO: Preparing pulp-platform.org::pulpissimo_remote_bitbang:0
+INFO: Preparing pulp-platform.org::register_interface:0
+INFO: Preparing pulp-platform.org::riscv_dbg_pkg:0
+INFO: Preparing pulp-platform.org::tech_cells_generic:0
+INFO: Preparing x-heep:ip:cluster_interconnect:0
+INFO: Preparing x-heep:rtl:structs:0
+INFO: Preparing x-heep:sim:pad_cells:0
+INFO: Preparing x-heep:sim:sram_wrapper:0
+INFO: Preparing xheep:gen:waiver_generator_v5:0
+INFO: Preparing xheep:util:reg-generator:0.1.0
+INFO: Preparing esl_epfl:ip:obi_spi_slave:0
+INFO: Preparing example:ip:ams:0
+INFO: Preparing example:ip:i2s_tx_sink:0
+INFO: Preparing example:ip:iffifo:0
+INFO: Preparing example:ip:slow_memory:0
+INFO: Preparing lowrisc:ip:rv_plic_component:0.1
+INFO: Preparing lowrisc:prim:arbiter:0
+INFO: Preparing lowrisc:prim:cipher_pkg:0.1
+INFO: Preparing lowrisc:prim:diff_decode:0
+INFO: Preparing lowrisc:prim:lfsr:0.1
+INFO: Preparing lowrisc:prim:prim_pkg:0.1
+INFO: Preparing lowrisc:prim:subreg:0
+INFO: Preparing lowrisc:tlul:headers:0.1
+INFO: Preparing openhwgroup.org:ip:verilator_waiver:0
+INFO: Preparing openhwgroup:cve2:cve2_core:0.1
+INFO: Preparing pulp-platform.org::axi:0.39.9
+INFO: Preparing pulp-platform.org::fpnew:0
+INFO: Preparing pulp-platform.org::riscv_dbg:0
+INFO: Preparing pulp-platform.org:ip:gpio:0
+INFO: Preparing x-heep::packages:0
+INFO: Preparing x-heep:ip:dma:0
+INFO: Preparing x-heep:ip:dma_subsystem:0
+INFO: Preparing x-heep:ip:i2s:0
+INFO: Preparing x-heep:ip:obi_fifo:0
+INFO: Preparing x-heep:ip:pad_control:0
+INFO: Preparing x-heep:ip:pdm2pcm:0
+INFO: Preparing example:ip:dlc:0
+INFO: Preparing example:ip:im2col_spc:0
+INFO: Preparing lowrisc:prim:buf:0
+INFO: Preparing lowrisc:prim:cipher:0
+INFO: Preparing lowrisc:prim:clock_mux2:0
+INFO: Preparing lowrisc:prim:flop:0
+INFO: Preparing lowrisc:prim:flop_en:0
+INFO: Preparing lowrisc:prim:ram_1p:0
+INFO: Preparing lowrisc:prim:xor2:0
+INFO: Preparing openhwgroup.org:ip:cv32e40p:0
+INFO: Preparing pulp-platform.org::axi_slice:0
+INFO: Preparing pulp-platform.org:ip:fpu_ss:0
+INFO: Preparing pulp-platform.org:ip:quadrilatero:0
+INFO: Preparing x-heep:ip:cv32e40px:0
+INFO: Preparing x-heep:ip:pad-ring:0
+INFO: Preparing lowrisc:prim:alert:0
+INFO: Preparing lowrisc:prim:flop_2sync:0
+INFO: Preparing lowrisc:prim:ram_1p_adv:0.1
+INFO: Preparing pulp-platform.org:serial_link:common:0
+INFO: Preparing x-heep::tb-fpu-utils:0
+INFO: Preparing lowrisc:prim:fifo:0
+INFO: Preparing pulp-platform.org:serial_link:serial_link:0
+INFO: Preparing lowrisc:prim:all:0.1
+INFO: Preparing lowrisc:tlul:common:0.1
+INFO: Preparing x-heep:ip:serial_link_xheep_wrapper:0
+INFO: Preparing lowrisc:ip:spi_host:1.0
+INFO: Preparing lowrisc:prim:ram_1p_scr:0.1
+INFO: Preparing lowrisc:tlul:socket_1n:0.1
+INFO: Preparing lowrisc:tlul:trans_intg:0.1
+INFO: Preparing openhwgroup.org:ip:soc_ctrl:0
+INFO: Preparing x-heep::tb-utils:0
+INFO: Preparing x-heep:ip:fast_intr_ctrl:0
+INFO: Preparing x-heep:ip:power_manager:0
+INFO: Preparing lowrisc:tlul:adapter_reg:0.1
+INFO: Preparing openhwgroup:cve2:cve2_top:0.1
+INFO: Preparing x-heep:ip:boot_rom:0
+INFO: Preparing x-heep:ip:w25q128jw_controller:0
+INFO: Preparing lowrisc:ip:tlul:0.1
+INFO: Preparing x-heep:ip:spi:0
+INFO: Preparing lowrisc:ip:i2c:0.1
+INFO: Preparing lowrisc:ip:rv_plic_example:0.1
+INFO: Preparing lowrisc:ip:rv_timer:0.1
+INFO: Preparing lowrisc:ip:uart:0.1
+INFO: Preparing openhwgroup.org:systems:core-v-mini-mcu:1.0.6
+INFO: Generating example:ip:ams-ams:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'ams-ams.core'
+INFO: Generating example:ip:i2s_tx_sink-i2s_tx_sink:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'i2s_tx_sink-i2s_tx_sink.core'
+INFO: Generating example:ip:iffifo-iffifo:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'iffifo-iffifo.core'
+INFO: Generating lowrisc:prim:prim_pkg-impl:0.1
+Creating prim_pkg.sv
+Core file written to prim_pkg.core.
+INFO: Generating openhwgroup.org:ip:verilator_waiver-waivers-v5:0
+> INFO: Detected Verilator 5.X, adding dedicated waivers to 'verilator_waiver-waivers-v5.core'
+> INFO: Successfully wrote additional dependencies to 'verilator_waiver-waivers-v5.core'
+INFO: Generating x-heep:ip:dma-dma:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'dma-dma.core'
+INFO: Generating x-heep:ip:pad_control-pad_control:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'pad_control-pad_control.core'
+INFO: Generating x-heep:ip:pdm2pcm-pdm2pcm:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'pdm2pcm-pdm2pcm.core'
+INFO: Generating example:ip:dlc-dlc:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'dlc-dlc.core'
+INFO: Generating example:ip:im2col_spc-im2col_spc:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'im2col_spc-im2col_spc.core'
+INFO: Generating lowrisc:prim:buf-impl:0
+Implementations for primitive buf: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_buf.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_buf-impl_0/prim_buf.sv
+Creating core file for primitive buf.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_buf-impl_0/prim_buf.core
+INFO: Generating lowrisc:prim:clock_mux2-impl:0
+Implementations for primitive clock_mux2: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_clock_mux2.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_clock_mux2-impl_0/prim_clock_mux2.sv
+Creating core file for primitive clock_mux2.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_clock_mux2-impl_0/prim_clock_mux2.core
+INFO: Generating lowrisc:prim:flop-impl:0
+Implementations for primitive flop: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_flop.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop-impl_0/prim_flop.sv
+Creating core file for primitive flop.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop-impl_0/prim_flop.core
+INFO: Generating lowrisc:prim:flop_en-impl:0
+Implementations for primitive flop_en: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_flop_en.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_en-impl_0/prim_flop_en.sv
+Creating core file for primitive flop_en.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_en-impl_0/prim_flop_en.core
+INFO: Generating lowrisc:prim:ram_1p-impl:0
+Implementations for primitive ram_1p: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_ram_1p.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_ram_1p-impl_0/prim_ram_1p.sv
+Creating core file for primitive ram_1p.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_ram_1p-impl_0/prim_ram_1p.core
+INFO: Generating lowrisc:prim:xor2-impl:0
+Implementations for primitive xor2: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_xor2.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_xor2-impl_0/prim_xor2.sv
+Creating core file for primitive xor2.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_xor2-impl_0/prim_xor2.core
+INFO: Generating lowrisc:prim:flop_2sync-impl:0
+Implementations for primitive flop_2sync: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_flop_2sync.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_2sync-impl_0/prim_flop_2sync.sv
+Creating core file for primitive flop_2sync.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_2sync-impl_0/prim_flop_2sync.core
+INFO: Generating openhwgroup.org:ip:soc_ctrl-soc-ctrl:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'soc_ctrl-soc-ctrl.core'
+INFO: Generating x-heep::tb-utils-waivers-v5:0
+> INFO: Detected Verilator 5.X, adding dedicated waivers to 'tb-utils-waivers-v5.core'
+> INFO: Successfully wrote additional dependencies to 'tb-utils-waivers-v5.core'
+INFO: Generating x-heep:ip:power_manager-power-manager:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'power_manager-power-manager.core'
+INFO: Generating x-heep:ip:boot_rom-boot_rom:0
+make[1]: Entering directory '/workspace/x-heep/hw/ip/boot_rom'
+rm -f *.img *.bin *.sv .*dump
+make[1]: Leaving directory '/workspace/x-heep/hw/ip/boot_rom'
+make[1]: Entering directory '/workspace/x-heep/hw/ip/boot_rom'
+/tools/riscv/bin/riscv32-unknown-elf-gcc -I ../../../sw/device/lib/drivers/ams/ -I ../../../sw/device/lib/drivers/dlc/ -I ../../../sw/device/lib/drivers/dma/ -I ../../../sw/device/lib/drivers/fast_intr_ctrl/ -I ../../../sw/device/lib/drivers/gpio/ -I ../../../sw/device/lib/drivers/i2c/ -I ../../../sw/device/lib/drivers/i2s/ -I ../../../sw/device/lib/drivers/i2s_tx_sink/ -I ../../../sw/device/lib/drivers/iffifo/ -I ../../../sw/device/lib/drivers/im2col_spc/ -I ../../../sw/device/lib/drivers/pad_control/ -I ../../../sw/device/lib/drivers/pdm2pcm/ -I ../../../sw/device/lib/drivers/power_manager/ -I ../../../sw/device/lib/drivers/rv_plic/ -I ../../../sw/device/lib/drivers/rv_timer/ -I ../../../sw/device/lib/drivers/serial_link/ -I ../../../sw/device/lib/drivers/soc_ctrl/ -I ../../../sw/device/lib/drivers/spi_host/ -I ../../../sw/device/lib/drivers/uart/ -I ../../../sw/device/lib/drivers/w25q128jw_controller/ -I ../../../sw/device/lib/base/freestanding/ -I ../../../sw/device/lib/runtime/ -Tlink.ld boot_rom.S -nostdlib -fPIC -static -Wl,--no-gc-sections -o boot_rom.elf
+/tools/riscv/bin/riscv32-unknown-elf-objcopy -O binary boot_rom.elf boot_rom.bin
+dd if=boot_rom.bin of=boot_rom.img bs=1024 count=1
+0+1 records in
+0+1 records out
+212 bytes copied, 2.3597e-05 s, 9.0 MB/s
+/opt/conda/envs/x-heep/bin/python gen_rom.py boot_rom.img
+/tools/riscv/bin/riscv32-unknown-elf-objdump -d boot_rom.elf --disassemble-all --disassemble-zeroes --section=.text --section=.text.startup --section=.text.init --section=.data  > boot_rom.dump
+rm boot_rom.img boot_rom.bin boot_rom.elf
+make[1]: Leaving directory '/workspace/x-heep/hw/ip/boot_rom'
+INFO: Generating x-heep:ip:w25q128jw_controller-w25q128jw_controller:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'w25q128jw_controller-w25q128jw_controller.core'
+INFO: Wrote dependency graph to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/openhwgroup.org_systems_core-v-mini-mcu_1.0.6.deps-after-generators.dot
+INFO: Wrote Makefile fragment to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/core-deps.mk
+INFO: Setting up project
+
+make verible
+make[1]: Entering directory '/workspace/x-heep'
+$You are executing from: /workspace/x-heep
+USING MINICONDA x-heep
+util/format-verible;
+make[1]: Leaving directory '/workspace/x-heep'
+make format-python
+make[1]: Entering directory '/workspace/x-heep'
+$You are executing from: /workspace/x-heep
+USING MINICONDA x-heep
+/opt/conda/envs/x-heep/bin/python -m black util/xheep_gen
+All done! ✨ 🍰 ✨
+60 files left unchanged.
+/opt/conda/envs/x-heep/bin/python -m black util/periph_structs_gen
+All done! ✨ 🍰 ✨
+1 file left unchanged.
+/opt/conda/envs/x-heep/bin/python -m black util/waiver-gen.py
+All done! ✨ 🍰 ✨
+1 file left unchanged.
+/opt/conda/envs/x-heep/bin/python -m black util/c_gen.py
+All done! ✨ 🍰 ✨
+1 file left unchanged.
+/opt/conda/envs/x-heep/bin/python -m black test/test_x_heep_gen
+All done! ✨ 🍰 ✨
+1 file left unchanged.
+/opt/conda/envs/x-heep/bin/python -m black test/test_apps
+All done! ✨ 🍰 ✨
+6 files left unchanged.
+/opt/conda/envs/x-heep/bin/python -m black configs
+All done! ✨ 🍰 ✨
+5 files left unchanged.
+make[1]: Leaving directory '/workspace/x-heep'
+(x-heep) root@76770a445c4b:/workspace/x-heep# make app
+$You are executing from: /workspace/x-heep
+USING MINICONDA x-heep
+rm -f -r sw/build
+make[1]: Entering directory '/workspace/x-heep/sw'
+INFO: Using RISCV_XHEEP from environment or command line: /tools/riscv
+Re-run cmake no build system arguments
+-- The ASM compiler identification is GNU
+-- Found assembler: /tools/riscv/bin/riscv32-unknown-elf-gcc
+-- The C compiler identification is GNU 12.2.0
+-- The CXX compiler identification is GNU 12.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /tools/riscv/bin/riscv32-unknown-elf-gcc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /tools/riscv/bin/riscv32-unknown-elf-g++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+Internal application
+Compiler flags:     -march=rv32imc_zicsr     -w -O2 -g     -nostartfiles     -ffunction-sections     -DHOST_BUILD     -DON_CHIP     -DINTERNAL_CRTO     -DportasmHANDLE_INTERRUPT=vSystemIrqHandler      
+Linker file: /workspace/x-heep/sw/linker/link.ld
+-- CLANG_LINKER_USE_LD = '0'
+-- Using GCC specific linker flags
+RISCV_XHEEP env variable: /tools/riscv
+Lib Folder RISCV-GCC: /tools/riscv/riscv32-unknown-elf/lib
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /workspace/x-heep/sw/build
+Build
+make -s -C build
+make[2]: Entering directory '/workspace/x-heep/sw/build'
+make[3]: Entering directory '/workspace/x-heep/sw/build'
+make[4]: Entering directory '/workspace/x-heep/sw/build'
+Dependee "/workspace/x-heep/sw/build/CMakeFiles/main.elf.dir/DependInfo.cmake" is newer than depender "/workspace/x-heep/sw/build/CMakeFiles/main.elf.dir/depend.internal".
+Dependee "/workspace/x-heep/sw/build/CMakeFiles/CMakeDirectoryInformation.cmake" is newer than depender "/workspace/x-heep/sw/build/CMakeFiles/main.elf.dir/depend.internal".
+Scanning dependencies of target main.elf
+make[4]: Leaving directory '/workspace/x-heep/sw/build'
+make[4]: Entering directory '/workspace/x-heep/sw/build'
+[  2%] Building C object CMakeFiles/main.elf.dir/applications/hello_world/main.c.obj
+[  5%] Building ASM object CMakeFiles/main.elf.dir/device/lib/crt/crt0.S.obj
+[  8%] Building ASM object CMakeFiles/main.elf.dir/device/lib/crt/vectors.S.obj
+[ 10%] Building C object CMakeFiles/main.elf.dir/device/bsp/w25q/w25q.c.obj
+In file included from /workspace/x-heep/sw/device/bsp/w25q/w25q.c:58:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 13%] Building C object CMakeFiles/main.elf.dir/device/lib/base/memory.c.obj
+[ 16%] Building C object CMakeFiles/main.elf.dir/device/lib/base/mmio.c.obj
+[ 18%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/dma/dma.c.obj
+[ 21%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/fast_intr_ctrl/fast_intr_ctrl.c.obj
+[ 24%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/gpio/gpio.c.obj
+In file included from /workspace/x-heep/sw/device/lib/drivers/gpio/gpio.c:40:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 27%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/i2c/i2c.c.obj
+[ 29%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/i2s/i2s.c.obj
+[ 32%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/i2s_tx_sink/i2s_tx_sink.c.obj
+[ 35%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/im2col_spc/im2col.c.obj
+In file included from /workspace/x-heep/sw/device/lib/drivers/im2col_spc/im2col.h:22,
+                 from /workspace/x-heep/sw/device/lib/drivers/im2col_spc/im2col.c:12:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 37%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/pad_control/pad_control.c.obj
+[ 40%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/power_manager/power_manager.c.obj
+In file included from /workspace/x-heep/sw/device/lib/drivers/power_manager/power_manager.c:11:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 43%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/rv_plic/rv_plic.c.obj
+[ 45%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/rv_timer/rv_timer.c.obj
+[ 48%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/serial_link/serial_link.c.obj
+In file included from /workspace/x-heep/sw/device/lib/drivers/serial_link/serial_link.h:12,
+                 from /workspace/x-heep/sw/device/lib/drivers/serial_link/serial_link.c:3:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 51%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/serial_link/serial_link_xheep_wrapper_driver.c.obj
+[ 54%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/soc_ctrl/soc_ctrl.c.obj
+[ 56%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/spi_host/spi_host.c.obj
+[ 59%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/uart/uart.c.obj
+[ 62%] Building C object CMakeFiles/main.elf.dir/device/lib/drivers/w25q128jw_controller/w25q128jw_controller.c.obj
+[ 64%] Building C object CMakeFiles/main.elf.dir/device/lib/runtime/core_v_mini_mcu.c.obj
+[ 67%] Building C object CMakeFiles/main.elf.dir/device/lib/runtime/handler.c.obj
+[ 70%] Building C object CMakeFiles/main.elf.dir/device/lib/runtime/init.c.obj
+[ 72%] Building C object CMakeFiles/main.elf.dir/device/lib/runtime/syscalls.c.obj
+In file included from /workspace/x-heep/sw/device/lib/runtime/syscalls.c:37:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 75%] Building C object CMakeFiles/main.elf.dir/device/lib/sdk/dma/dma_sdk.c.obj
+[ 78%] Building C object CMakeFiles/main.elf.dir/device/lib/sdk/i2c/i2c_sdk.c.obj
+In file included from /workspace/x-heep/sw/device/lib/sdk/i2c/i2c_sdk.h:18,
+                 from /workspace/x-heep/sw/device/lib/sdk/i2c/i2c_sdk.c:10:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 81%] Building C object CMakeFiles/main.elf.dir/device/lib/sdk/spi/spi_sdk.c.obj
+[ 83%] Building C object CMakeFiles/main.elf.dir/device/lib/sdk/spi_slave/spi_slave_sdk.c.obj
+[ 86%] Building C object CMakeFiles/main.elf.dir/device/lib/sdk/timer/timer_sdk.c.obj
+In file included from /workspace/x-heep/sw/device/lib/sdk/timer/timer_sdk.h:21,
+                 from /workspace/x-heep/sw/device/lib/sdk/timer/timer_sdk.c:12:
+/workspace/x-heep/sw/device/target/sim/x-heep.h:8:9: note: '#pragma message: the x-heep.h for SIMULATION is used'
+    8 | #pragma message ( "the x-heep.h for SIMULATION is used" )
+      |         ^~~~~~~
+[ 89%] Building ASM object CMakeFiles/main.elf.dir/device/lib/drivers/power_manager/power_manager_cpu_restore.S.obj
+[ 91%] Building ASM object CMakeFiles/main.elf.dir/device/lib/drivers/power_manager/power_manager_cpu_store.S.obj
+[ 94%] Building CXX object CMakeFiles/main.elf.dir/device/lib/runtime/heap.cpp.obj
+[ 97%] Building CXX object CMakeFiles/main.elf.dir/device/lib/runtime/syscalls_cpp.cpp.obj
+[100%] Linking CXX executable main.elf
+Invoking: C Disassemble ( CMakeFiles/main.dir/main.c.obj)
+Invoking: Disassemble (/tools/riscv/bin/riscv32-unknown-elf-objdump)
+Invoking: Hexdump
+Invoking: SREC Hexdump
+Invoking: Binary dump
+Invoking: Linker script copy
+make[4]: Leaving directory '/workspace/x-heep/sw/build'
+[100%] Built target main.elf
+make[3]: Leaving directory '/workspace/x-heep/sw/build'
+make[2]: Leaving directory '/workspace/x-heep/sw/build'
+make[1]: Leaving directory '/workspace/x-heep/sw'
+Total space: 128.0 kB = Continuous: [32, 32, 32, 32] kB + Interleaved: [0] kB
+Bank        Start      End   Sz(kB)  Usd(kB)  Req(kB)  Utilz(%)    Contents
+ram0:         0.0     58.0     58.0      7.7      7.7      13.3    Code (C), ROData (R)
+ram1:        58.0    128.0     70.0      5.0      5.0       7.2    Data (d)
+Code placement: execute from RAM.
+
+Cont 0 CCCCCCCR------------------------ 	 24.1%
+Cont 1 --------------------------dddddd 	 15.7%
+Cont 2 -------------------------------- 	  0.0%
+Cont 3 -------------------------------- 	  0.0%
+(x-heep) root@76770a445c4b:/workspace/x-heep# make verilator-build
+$You are executing from: /workspace/x-heep
+USING MINICONDA x-heep
+/opt/conda/envs/x-heep/bin/fusesoc --cores-root . run --no-export --target=sim --tool=verilator  --build openhwgroup.org:systems:core-v-mini-mcu  2>&1 | tee buildsim.log
+WARNING: Unknown item cache_type in section Generators
+WARNING: Unknown item cache_type in section Generators
+WARNING: Unknown item formal in section Target
+WARNING: Unknown item formal in section Target
+WARNING: Unknown item formal in section Target
+INFO: Preparing example:ip:gpio_cnt:0
+INFO: Preparing example:ip:i2s_microphone:0
+INFO: Preparing example:ip:pdm2pcm_dummy:0
+INFO: Preparing example:ip:simple_accelerator:0
+INFO: Preparing lowrisc:constants:top_pkg:0
+INFO: Preparing lowrisc:dv_dpi:uartdpi:0.1
+INFO: Preparing lowrisc:dv:dv_fcov_macros:0
+INFO: Preparing lowrisc:ip:spi_device_pkg:0.1
+INFO: Preparing lowrisc:lint:common:0.1
+INFO: Preparing lowrisc:lint:comportable:0.1
+INFO: Preparing lowrisc:prim:assert:0.1
+INFO: Preparing lowrisc:prim:primgen:0.1
+INFO: Preparing lowrisc:prim:ram_1p_pkg:0
+INFO: Preparing lowrisc:prim:secded:0.1
+INFO: Preparing lowrisc:prim:util:0.1
+INFO: Preparing openhwgroup.org:ip:cv32e40x:0
+INFO: Preparing openhwgroup:cve2:cve2_clock_gate:0.1
+INFO: Preparing openhwgroup:cve2:cve2_pkg:0.1
+INFO: Preparing pulp-platform.org::common_cells:1.38.0
+INFO: Preparing pulp-platform.org::pulpissimo_remote_bitbang:0
+INFO: Preparing pulp-platform.org::register_interface:0
+INFO: Preparing pulp-platform.org::riscv_dbg_pkg:0
+INFO: Preparing pulp-platform.org::tech_cells_generic:0
+INFO: Preparing x-heep:ip:cluster_interconnect:0
+INFO: Preparing x-heep:rtl:structs:0
+INFO: Preparing x-heep:sim:pad_cells:0
+INFO: Preparing x-heep:sim:sram_wrapper:0
+INFO: Preparing xheep:gen:waiver_generator_v5:0
+INFO: Preparing xheep:util:reg-generator:0.1.0
+INFO: Preparing esl_epfl:ip:obi_spi_slave:0
+INFO: Preparing example:ip:ams:0
+INFO: Preparing example:ip:i2s_tx_sink:0
+INFO: Preparing example:ip:iffifo:0
+INFO: Preparing example:ip:slow_memory:0
+INFO: Preparing lowrisc:ip:rv_plic_component:0.1
+INFO: Preparing lowrisc:prim:arbiter:0
+INFO: Preparing lowrisc:prim:cipher_pkg:0.1
+INFO: Preparing lowrisc:prim:diff_decode:0
+INFO: Preparing lowrisc:prim:lfsr:0.1
+INFO: Preparing lowrisc:prim:prim_pkg:0.1
+INFO: Preparing lowrisc:prim:subreg:0
+INFO: Preparing lowrisc:tlul:headers:0.1
+INFO: Preparing openhwgroup.org:ip:verilator_waiver:0
+INFO: Preparing openhwgroup:cve2:cve2_core:0.1
+INFO: Preparing pulp-platform.org::axi:0.39.9
+INFO: Preparing pulp-platform.org::fpnew:0
+INFO: Preparing pulp-platform.org::riscv_dbg:0
+INFO: Preparing pulp-platform.org:ip:gpio:0
+INFO: Preparing x-heep::packages:0
+INFO: Preparing x-heep:ip:dma:0
+INFO: Preparing x-heep:ip:dma_subsystem:0
+INFO: Preparing x-heep:ip:i2s:0
+INFO: Preparing x-heep:ip:obi_fifo:0
+INFO: Preparing x-heep:ip:pad_control:0
+INFO: Preparing x-heep:ip:pdm2pcm:0
+INFO: Preparing example:ip:dlc:0
+INFO: Preparing example:ip:im2col_spc:0
+INFO: Preparing lowrisc:prim:buf:0
+INFO: Preparing lowrisc:prim:cipher:0
+INFO: Preparing lowrisc:prim:clock_mux2:0
+INFO: Preparing lowrisc:prim:flop:0
+INFO: Preparing lowrisc:prim:flop_en:0
+INFO: Preparing lowrisc:prim:ram_1p:0
+INFO: Preparing lowrisc:prim:xor2:0
+INFO: Preparing openhwgroup.org:ip:cv32e40p:0
+INFO: Preparing pulp-platform.org::axi_slice:0
+INFO: Preparing pulp-platform.org:ip:fpu_ss:0
+INFO: Preparing pulp-platform.org:ip:quadrilatero:0
+INFO: Preparing x-heep:ip:cv32e40px:0
+INFO: Preparing x-heep:ip:pad-ring:0
+INFO: Preparing lowrisc:prim:alert:0
+INFO: Preparing lowrisc:prim:flop_2sync:0
+INFO: Preparing lowrisc:prim:ram_1p_adv:0.1
+INFO: Preparing pulp-platform.org:serial_link:common:0
+INFO: Preparing x-heep::tb-fpu-utils:0
+INFO: Preparing lowrisc:prim:fifo:0
+INFO: Preparing pulp-platform.org:serial_link:serial_link:0
+INFO: Preparing lowrisc:prim:all:0.1
+INFO: Preparing lowrisc:tlul:common:0.1
+INFO: Preparing x-heep:ip:serial_link_xheep_wrapper:0
+INFO: Preparing lowrisc:ip:spi_host:1.0
+INFO: Preparing lowrisc:prim:ram_1p_scr:0.1
+INFO: Preparing lowrisc:tlul:socket_1n:0.1
+INFO: Preparing lowrisc:tlul:trans_intg:0.1
+INFO: Preparing openhwgroup.org:ip:soc_ctrl:0
+INFO: Preparing x-heep::tb-utils:0
+INFO: Preparing x-heep:ip:fast_intr_ctrl:0
+INFO: Preparing x-heep:ip:power_manager:0
+INFO: Preparing lowrisc:tlul:adapter_reg:0.1
+INFO: Preparing openhwgroup:cve2:cve2_top:0.1
+INFO: Preparing x-heep:ip:boot_rom:0
+INFO: Preparing x-heep:ip:w25q128jw_controller:0
+INFO: Preparing lowrisc:ip:tlul:0.1
+INFO: Preparing x-heep:ip:spi:0
+INFO: Preparing lowrisc:ip:i2c:0.1
+INFO: Preparing lowrisc:ip:rv_plic_example:0.1
+INFO: Preparing lowrisc:ip:rv_timer:0.1
+INFO: Preparing lowrisc:ip:uart:0.1
+INFO: Preparing openhwgroup.org:systems:core-v-mini-mcu:1.0.6
+INFO: Generating example:ip:ams-ams:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'ams-ams.core'
+INFO: Generating example:ip:i2s_tx_sink-i2s_tx_sink:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'i2s_tx_sink-i2s_tx_sink.core'
+INFO: Generating example:ip:iffifo-iffifo:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'iffifo-iffifo.core'
+INFO: Generating lowrisc:prim:prim_pkg-impl:0.1
+Creating prim_pkg.sv
+Core file written to prim_pkg.core.
+INFO: Generating openhwgroup.org:ip:verilator_waiver-waivers-v5:0
+> INFO: Detected Verilator 5.X, adding dedicated waivers to 'verilator_waiver-waivers-v5.core'
+> INFO: Successfully wrote additional dependencies to 'verilator_waiver-waivers-v5.core'
+INFO: Generating x-heep:ip:dma-dma:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'dma-dma.core'
+INFO: Generating x-heep:ip:pad_control-pad_control:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'pad_control-pad_control.core'
+INFO: Generating x-heep:ip:pdm2pcm-pdm2pcm:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'pdm2pcm-pdm2pcm.core'
+INFO: Generating example:ip:dlc-dlc:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'dlc-dlc.core'
+INFO: Generating example:ip:im2col_spc-im2col_spc:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'im2col_spc-im2col_spc.core'
+INFO: Generating lowrisc:prim:buf-impl:0
+Implementations for primitive buf: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_buf.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_buf-impl_0/prim_buf.sv
+Creating core file for primitive buf.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_buf-impl_0/prim_buf.core
+INFO: Generating lowrisc:prim:clock_mux2-impl:0
+Implementations for primitive clock_mux2: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_clock_mux2.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_clock_mux2-impl_0/prim_clock_mux2.sv
+Creating core file for primitive clock_mux2.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_clock_mux2-impl_0/prim_clock_mux2.core
+INFO: Generating lowrisc:prim:flop-impl:0
+Implementations for primitive flop: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_flop.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop-impl_0/prim_flop.sv
+Creating core file for primitive flop.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop-impl_0/prim_flop.core
+INFO: Generating lowrisc:prim:flop_en-impl:0
+Implementations for primitive flop_en: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_flop_en.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_en-impl_0/prim_flop_en.sv
+Creating core file for primitive flop_en.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_en-impl_0/prim_flop_en.core
+INFO: Generating lowrisc:prim:ram_1p-impl:0
+Implementations for primitive ram_1p: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_ram_1p.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_ram_1p-impl_0/prim_ram_1p.sv
+Creating core file for primitive ram_1p.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_ram_1p-impl_0/prim_ram_1p.core
+INFO: Generating lowrisc:prim:xor2-impl:0
+Implementations for primitive xor2: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_xor2.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_xor2-impl_0/prim_xor2.sv
+Creating core file for primitive xor2.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_xor2-impl_0/prim_xor2.core
+INFO: Generating lowrisc:prim:flop_2sync-impl:0
+Implementations for primitive flop_2sync: generic
+Inspecting generic module /workspace/x-heep/hw/vendor/lowrisc/opentitan/hw/ip/prim_generic/rtl/prim_generic_flop_2sync.sv
+Creating SystemVerilog module for abstract primitive
+Abstract primitive written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_2sync-impl_0/prim_flop_2sync.sv
+Creating core file for primitive flop_2sync.
+Core file written to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/generated/lowrisc_prim_flop_2sync-impl_0/prim_flop_2sync.core
+INFO: Generating openhwgroup.org:ip:soc_ctrl-soc-ctrl:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'soc_ctrl-soc-ctrl.core'
+INFO: Generating x-heep::tb-utils-waivers-v5:0
+> INFO: Detected Verilator 5.X, adding dedicated waivers to 'tb-utils-waivers-v5.core'
+> INFO: Successfully wrote additional dependencies to 'tb-utils-waivers-v5.core'
+INFO: Generating x-heep:ip:power_manager-power-manager:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'power_manager-power-manager.core'
+INFO: Generating x-heep:ip:boot_rom-boot_rom:0
+make[1]: Entering directory '/workspace/x-heep/hw/ip/boot_rom'
+rm -f *.img *.bin *.sv .*dump
+make[1]: Leaving directory '/workspace/x-heep/hw/ip/boot_rom'
+make[1]: Entering directory '/workspace/x-heep/hw/ip/boot_rom'
+/tools/riscv/bin/riscv32-unknown-elf-gcc -I ../../../sw/device/lib/drivers/ams/ -I ../../../sw/device/lib/drivers/dlc/ -I ../../../sw/device/lib/drivers/dma/ -I ../../../sw/device/lib/drivers/fast_intr_ctrl/ -I ../../../sw/device/lib/drivers/gpio/ -I ../../../sw/device/lib/drivers/i2c/ -I ../../../sw/device/lib/drivers/i2s/ -I ../../../sw/device/lib/drivers/i2s_tx_sink/ -I ../../../sw/device/lib/drivers/iffifo/ -I ../../../sw/device/lib/drivers/im2col_spc/ -I ../../../sw/device/lib/drivers/pad_control/ -I ../../../sw/device/lib/drivers/pdm2pcm/ -I ../../../sw/device/lib/drivers/power_manager/ -I ../../../sw/device/lib/drivers/rv_plic/ -I ../../../sw/device/lib/drivers/rv_timer/ -I ../../../sw/device/lib/drivers/serial_link/ -I ../../../sw/device/lib/drivers/soc_ctrl/ -I ../../../sw/device/lib/drivers/spi_host/ -I ../../../sw/device/lib/drivers/uart/ -I ../../../sw/device/lib/drivers/w25q128jw_controller/ -I ../../../sw/device/lib/base/freestanding/ -I ../../../sw/device/lib/runtime/ -Tlink.ld boot_rom.S -nostdlib -fPIC -static -Wl,--no-gc-sections -o boot_rom.elf
+/tools/riscv/bin/riscv32-unknown-elf-objcopy -O binary boot_rom.elf boot_rom.bin
+dd if=boot_rom.bin of=boot_rom.img bs=1024 count=1
+0+1 records in
+0+1 records out
+212 bytes copied, 2.2078e-05 s, 9.6 MB/s
+/opt/conda/envs/x-heep/bin/python gen_rom.py boot_rom.img
+/tools/riscv/bin/riscv32-unknown-elf-objdump -d boot_rom.elf --disassemble-all --disassemble-zeroes --section=.text --section=.text.startup --section=.text.init --section=.data  > boot_rom.dump
+rm boot_rom.img boot_rom.bin boot_rom.elf
+make[1]: Leaving directory '/workspace/x-heep/hw/ip/boot_rom'
+INFO: Generating x-heep:ip:w25q128jw_controller-w25q128jw_controller:0
+> INFO: All outputs are up to date. Skipping generation.
+> INFO: Successfully wrote 'w25q128jw_controller-w25q128jw_controller.core'
+INFO: Wrote dependency graph to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/openhwgroup.org_systems_core-v-mini-mcu_1.0.6.deps-after-generators.dot
+INFO: Wrote Makefile fragment to /workspace/x-heep/build/openhwgroup.org_systems_core-v-mini-mcu_1.0.6/sim-verilator/core-deps.mk
+INFO: Setting up project
+INFO: Building simulation model
+
+(x-heep) root@76770a445c4b:/workspace/x-heep# make verilator-run
+$You are executing from: /workspace/x-heep
+USING MINICONDA x-heep
+/opt/conda/envs/x-heep/bin/fusesoc --cores-root . run --no-export --target=sim --tool=verilator  --run openhwgroup.org:systems:core-v-mini-mcu  \
+	--run_options="+firmware=../../../sw/build/main.hex "
+WARNING: Unknown item cache_type in section Generators
+WARNING: Unknown item cache_type in section Generators
+WARNING: Unknown item formal in section Target
+WARNING: Unknown item formal in section Target
+WARNING: Unknown item formal in section Target
+INFO: Running
+INFO: Running pre_run script remove_uart_log
+INFO: Running simulation
+[TESTBENCH]: No OpenOCD is used
+[TESTBENCH]: loading firmware  ../../../sw/build/main.hex
+[TESTBENCH]: No Max time specified
+[TESTBENCH]: No Boot Option specified, using jtag (boot_sel=0)
+                   0: the parameter FPU_SS_ZFINX is 0
+                   0: the parameter QUADRILATERO is 0
+                   0: the parameter JTAG_DPI is 0
+                   0: the parameter EXT_DOMAINS is 00000000
+                   0: the parameter USE_EXTERNAL_DEVICE_EXAMPLE is 1
+                   0: the parameter CLK_FREQUENCY is     100000 KHz
+[X-HEEP]: NUM_BYTES =        128KB
+
+UART: Created /dev/pts/1 for uart0. Connect to it with any terminal program, e.g.
+$ screen /dev/pts/1
+UART: Additionally writing all UART output to 'uart0.log'.
+Reset Released
+Set Exit Loop
+Memory Loaded
+Simulation finished after 13002 clock cycles
+Program Finished with value 0
+INFO: Running post_run script print_uart_log
+hello world!
+(x-heep) root@76770a445c4b:/workspace/x-heep# 
+
