@@ -1,431 +1,682 @@
+# WFI、core_sleep 与唤醒路径分析
+## 摘要
+本阶段主要针对 X-HEEP + CV32E20 中 CPU 的 WFI、睡眠状态以及唤醒路径进行源码分析，目标是回答“软件如何执行 WFI、CPU 如何进入睡眠、`core_sleep` 如何产生和传递、Power Manager 如何使用该信号，以及中断如何唤醒 CPU”等问题，为后续 Idle Monitor、Dirty Tracker 和低功耗决策逻辑的设计提供接口依据。
 
-X-HEEP / CV32E20 WFI 与 Idle 路径搜索记录
+通过对 X-HEEP 源码的检索，可以确认：软件侧通过 `wait_for_interrupt()` 执行 RISC-V 的 `wfi` 指令。WFI 在 CV32E20 的 ID stage 中被译码为 `wfi_insn_dec`，随后传递给 `cve2_controller` 的 `wfi_insn_i`。Controller 将有效的 WFI 识别为一种 `special request`，CPU 控制器依次经过 `FLUSH`、`WAIT_SLEEP`，最终进入 `SLEEP`。
 
-记录日期：2026-10-06
+进入 `SLEEP` 后，CPU 在没有唤醒事件时保持睡眠；当检测到 `irq_pending_i`、`irq_nm_i` 或调试请求等条件时，Controller 从 `SLEEP` 转向 `FIRST_FETCH`，CPU 恢复取指。同时，CV32E20 的 `cve2_top` 根据 CPU 当前工作状态产生 `core_sleep_o`，该信号经过 CPU 子系统向 SoC 上层传递为 `core_sleep`，并被低功耗相关模块使用。
 
-工程路径：
+本阶段还确认，当前工程中没有直接搜索到 `idle_enter` 和 `idle_exit` 信号。因此，在不修改 CV32E20 CPU 内核的前提下，可以考虑在 CPU 子系统外部根据 `core_sleep` 的边沿生成这两个事件信号。
+### 对任务要求的 6 个问题的简要回答
+1. **软件怎样执行 WFI，调用位置在哪里？**
+   软件侧在 `sw/device/lib/runtime/hart.h` 中定义了 `wait_for_interrupt()`，函数内部通过 `asm volatile("wfi")` 执行 WFI 指令。此外，`sw/device/lib/drivers/power_manager/power_manager_cpu_store.S` 中还存在与深度低功耗相关的 WFI 路径，该路径会在执行 WFI 前保存 CPU 上下文。
 
-~/projects/x-heep
+2. **CPU 哪个端口产生睡眠状态？**
+   CV32E20 的 `cve2_top.sv` 中产生 `core_sleep_o`。其逻辑与 `fetch_enable_q`、`core_busy_q`、`debug_req_i`、`irq_pending` 和 `irq_nm_i` 等信号有关。
 
-本文件用于记录第一阶段成员 #2 对 X-HEEP 中 WFI、CPU Sleep、core_sleep
-以及 Wake-up 路径进行源码搜索的过程。
+3. **`core_sleep` 在哪一层定义和传递？**
+   CPU 子系统输出 `core_sleep_o`，然后在 SoC 顶层形成 `core_sleep`，再向上层模块传递。主要路径可以表示为：`cpu_subsystem.core_sleep_o → core_sleep → ao_peripheral_subsystem.core_sleep_i`。Power Manager 中也存在 `core_sleep_i` 输入。
 
-============================================================
-一、当前 CPU 配置
+4. **`power_manager` 如何使用 `core_sleep`？**
+   `power_manager.sv` 中存在 `core_sleep_i`，并将其与 `power_gate_core` 等控制条件结合，用于低功耗状态控制。因此，`core_sleep` 可以作为 CPU 已经处于空闲/睡眠状态的重要状态输入，但它本身并不等同于“立即关电”。
 
-当前工程使用：
+5. **中断到来后如何退出睡眠？**
+   Controller 在 `SLEEP` 状态下检测 `irq_nm_i`、`irq_pending_i`、`debug_req_i`、`debug_mode_q` 和 `debug_single_step_i` 等条件。如果检测到相关唤醒事件，状态机会从 `SLEEP` 转向 `FIRST_FETCH`，CPU 随后恢复取指。
 
-CPU：
-CV32E20
+6. **`idle_enter`、`idle_exit` 应怎样生成？**
+   当前工程中没有直接找到这两个信号。因此，在第一阶段不修改 CPU 内核的前提下，可以在 CPU 子系统外部保存上一拍的 `core_sleep`，通过边沿检测生成：`idle_enter = core_sleep & ~core_sleep_d`，`idle_exit = ~core_sleep & core_sleep_d`。这样 `core_sleep` 从 0 变为 1 时产生 `idle_enter`，从 1 变为 0 时产生 `idle_exit`。
 
-RV32E：
-false
+---
 
-RV32M：
-RV32MSlow
+## 1. 软件怎样执行 WFI
 
-CPU 子系统文件：
-
-hw/core-v-mini-mcu/cpu_subsystem.sv
-
-============================================================
-二、搜索软件中的 WFI
-
-使用的命令：
-
-grep -RniE "WFI|wfi|wait_for_interrupt" sw hw tb --exclude-dir=vendor --exclude-dir=.git | head -100
-
-这个命令的目的：
-
-寻找软件代码中执行 WFI 的位置。
-
-重点结果包括：
-
-sw/device/lib/runtime/hart.h
-
-sw/device/lib/drivers/power_manager/power_manager_cpu_store.S
-
-sw/device/lib/drivers/w25q128jw_controller/w25q128jw_controller.c
-
-sw/device/lib/runtime/syscalls.c
-
-============================================================
-三、确认普通软件 WFI 封装
+### 1.1 `wait_for_interrupt()` 函数
 
 文件：
 
-sw/device/lib/runtime/hart.h
+`sw/device/lib/runtime/hart.h`
 
-关键代码：
+其中可以找到：
 
-static inline void wait_for_interrupt(void) {
-asm volatile("wfi");
-}
+```
+static inline void wait_for_interrupt(void) { asm volatile("wfi"); }
+```
 
-含义：
+因此，软件侧通过 `wait_for_interrupt()` 执行 RISC-V 的 WFI 指令。
 
-软件调用 wait_for_interrupt() 后，最终会执行 RISC-V 的 WFI 指令。
+整体过程可以简单表示为：
 
-WFI 的基本含义：
+```
+软件调用 wait_for_interrupt()
+        ↓
+asm volatile("wfi")
+        ↓
+CPU 执行 WFI 指令
+        ↓
+CPU 进入等待状态
+```
 
-Wait For Interrupt
+---
 
-也就是：
-
-等待中断。
-
-============================================================
-四、确认 Power Manager 深度休眠路径
-
-文件：
-
-sw/device/lib/drivers/power_manager/power_manager_cpu_store.S
-
-该文件的注释明确说明：
-
-这个函数会保存 CPU 上下文，然后通过 WFI 进入较深的睡眠状态。
-
-确认该函数在 WFI 前完成：
-
-设置 POWER_GATE_CORE。
-设置 WAKEUP_STATE。
-保存 GP。
-保存 CPU 通用寄存器。
-保存 CSR 状态。
-保存恢复地址。
-最后执行 WFI。
-
-重要结论：
-
-WFI 本身不负责保存 CPU 上下文。
-
-CPU 上下文是在执行 WFI 之前由软件保存的。
-
-============================================================
-五、确认 CV32E20 CPU 实例
+## 2. 与 Power Manager 相关的软件 WFI 路径
 
 文件：
 
-hw/core-v-mini-mcu/cpu_subsystem.sv
+`sw/device/lib/drivers/power_manager/power_manager_cpu_store.S`
 
-确认：
+该文件中存在与 CPU 低功耗相关的保存和恢复路径。
 
-cve2_xif_wrapper 中实例化了 CV32E20。
+在执行 WFI 之前，该路径会进行 CPU 上下文保存，包括：
 
-同时，CPU 的 sleep 信号通过：
+* 设置 `POWER_GATE_CORE`
+* 设置 `WAKEUP_STATE`
+* 保存 `gp`
+* 保存 x1-x31（非 RV32E）
+* 保存相关 CSR 状态
+* 保存恢复地址 `power_manager_cpu_restore`
+* 最后执行 `wfi`
 
-core_sleep_o
+因此需要特别注意：
 
-输出。
+> WFI 指令本身并不负责保存 CPU 上下文。如果进入更深层的低功耗状态后需要恢复 CPU 执行现场，则需要在执行 WFI 前通过相应机制保存上下文。
 
-============================================================
-六、确认 WFI 的硬件处理过程
+整体过程可以理解为：
 
-相关文件：
+```
+准备进入深度低功耗
+        ↓
+保存 CPU 上下文
+        ↓
+设置 Power Manager 状态
+        ↓
+执行 WFI
+        ↓
+CPU 等待唤醒
+        ↓
+发生唤醒事件
+        ↓
+恢复 CPU 上下文
+        ↓
+继续执行
+```
 
-hw/vendor/openhwgroup/cv32e20/rtl/cve2_id_stage.sv
+---
 
-hw/vendor/openhwgroup/cv32e20/rtl/cve2_controller.sv
+## 3. WFI 在 CV32E20 中的译码和控制路径
 
-确认：
-
-WFI 被译码为 wfi_insn_dec。
-之后传递给 cve2_controller 的 wfi_insn_i。
-controller 将 WFI 识别为 special request。
-CPU 控制器依次经过 FLUSH、WAIT_SLEEP。
-最终进入 SLEEP。
-============================================================
-七、确认 SLEEP 状态下的行为
+### 3.1 WFI 译码
 
 文件：
 
-hw/vendor/openhwgroup/cv32e20/rtl/cve2_controller.sv
+`hw/vendor/openhwgroup/cv32e20/rtl/cve2_id_stage.sv`
 
-SLEEP 状态中：
+WFI 指令首先在 ID stage 中被识别，形成：
 
-如果没有中断或调试事件：
+`wfi_insn_dec`
 
-ctrl_busy_o = 0
+随后该信号传递给 Controller：
+
+`wfi_insn_dec → cve2_controller.wfi_insn_i`
+
+因此，WFI 从指令进入 CPU 控制逻辑后的第一个关键路径为：
+
+```
+WFI 指令
+    ↓
+wfi_insn_dec
+    ↓
+wfi_insn_i
+```
+
+### 3.2 Controller 接收 WFI
+
+文件：
+
+`hw/vendor/openhwgroup/cv32e20/rtl/cve2_controller.sv`
+
+Controller 中存在：
+
+`wfi_insn_i`
+
+并进一步形成：
+
+`assign wfi_insn = wfi_insn_i & instr_valid_i;`
+
+随后：
+
+`assign special_req_flush_only = wfi_insn | csr_pipe_flush;`
+
+因此，Controller 会将有效的 WFI 识别为一种 `special request`。
+
+完整路径可以表示为：
+
+```
+WFI 指令
+   ↓
+wfi_insn_dec
+   ↓
+wfi_insn_i
+   ↓
+wfi_insn
+   ↓
+special_req_flush_only
+   ↓
+FLUSH
+   ↓
+WAIT_SLEEP
+   ↓
+SLEEP
+```
+
+这里特别需要注意文字表述：
+
+**WFI 被译码为 `wfi_insn_dec`，之后传递给 `cve2_controller` 的 `wfi_insn_i`。Controller 将 WFI 识别为 `special request`，CPU 控制器依次经过 `FLUSH`、`WAIT_SLEEP`，最终进入 `SLEEP`。**
+
+---
+
+## 4. Controller 的具体状态变化
+
+在 Controller 中，WFI 经过以下几个主要阶段。
+
+### 4.1 FLUSH
+
+检测到 WFI 后，Controller 首先进入 `FLUSH` 状态。
+
+这一阶段主要用于处理流水线中的相关状态，为进入睡眠状态做准备。
+
+### 4.2 WAIT_SLEEP
+
+随后进入：
+
+`WAIT_SLEEP`
+
+该状态中存在：
+
+`ctrl_busy_o = 1'b0;`
+
+`instr_req_o = 1'b0;`
+
+`halt_if = 1'b1;`
+
+`flush_id = 1'b1;`
+
+`ctrl_fsm_ns = SLEEP;`
+
+可以简单理解为：
+
+```
+停止继续取指
+    ↓
+暂停相关流水线操作
+    ↓
+准备进入 SLEEP
+```
+
+### 4.3 SLEEP
+
+进入 `SLEEP` 后：
+
+`instr_req_o = 1'b0;`
+
+`halt_if = 1'b1;`
+
+`flush_id = 1'b1;`
+
+在没有唤醒事件的情况下：
+
+`ctrl_busy_o = 1'b0;`
 
 CPU 保持睡眠状态。
 
-如果发生：
+如果检测到以下事件之一：
 
-irq_nm_i
-irq_pending_i
-debug_req_i
-debug_mode_q
-debug_single_step_i
+* `irq_nm_i`
+* `irq_pending_i`
+* `debug_req_i`
+* `debug_mode_q`
+* `debug_single_step_i`
 
-中的相关事件：
+Controller 则会：
 
-控制器可以从 SLEEP 转移到 FIRST_FETCH。
-
-也就是说：
-
+```
 SLEEP
-→ 发生唤醒事件
-→ FIRST_FETCH
-→ CPU 重新开始取指。
+  ↓
+FIRST_FETCH
+```
 
-============================================================
-八、确认 core_busy_o
+从而退出睡眠并重新开始取指。
 
-文件：
+---
 
-hw/vendor/openhwgroup/cv32e20/rtl/cve2_core.sv
-
-关键代码：
-
-assign core_busy_o = ctrl_busy | if_busy | lsu_busy;
-
-简单理解：
-
-CPU 是否忙，需要同时考虑：
-
-ctrl_busy：
-控制器是否忙。
-
-if_busy：
-Instruction Fetch，取指部分是否忙。
-
-lsu_busy：
-Load/Store Unit，数据读写部分是否忙。
-
-只要其中一个为 1：
-
-core_busy_o = 1
-
-说明 CPU 还有工作。
-
-============================================================
-九、确认 core_sleep_o 的产生
+## 5. CV32E20 如何产生 `core_sleep_o`
 
 文件：
 
-hw/vendor/openhwgroup/cv32e20/rtl/cve2_top.sv
+`hw/vendor/openhwgroup/cv32e20/rtl/cve2_top.sv`
 
-关键代码：
+其中存在：
 
-assign clock_en = fetch_enable_q &
-(core_busy_q | debug_req_i | irq_pending | irq_nm_i);
+`assign clock_en = fetch_enable_q & (core_busy_q | debug_req_i | irq_pending | irq_nm_i);`
 
-assign core_sleep_o = fetch_enable_q & !clock_en;
+`assign core_sleep_o = fetch_enable_q & !clock_en;`
 
-含义：
+因此，`core_sleep_o` 是由 CPU 当前的运行状态产生的睡眠指示信号。
 
-clock_en 可以理解为：
+可以简单理解为：
 
-CPU 时钟当前是否需要继续运行。
+```
+CPU 允许运行
++
+当前没有需要继续执行的工作
++
+没有需要立即处理的中断/调试请求
+        ↓
+core_sleep_o 有效
+```
 
-当 CPU 不忙，并且没有需要继续运行的事件时：
+需要特别注意：
 
-clock_en 可能变成 0。
+> `core_sleep_o` 不是简单的“WFI 指令检测信号”。
 
-此时：
-
-core_sleep_o = 1
-
-因此 core_sleep_o 是 CPU 睡眠/时钟门控状态的派生信号。
-
-重要：
-
-core_sleep_o 不是 WFI 指令本身的直接输出。
-
-============================================================
-十、确认 SoC 中的信号传播
-
-相关文件：
-
-hw/core-v-mini-mcu/cpu_subsystem.sv
-
-hw/core-v-mini-mcu/core_v_mini_mcu.sv
-
-确认路径：
-
-CV32E20
-→ core_sleep_o
-→ CPU Subsystem
-→ core_sleep
-→ Always-On / Power Manager
-→ core_sleep_i
-
-============================================================
-十一、确认 Power Manager 的使用方式
-
-文件：
-
-hw/ip/power_manager/rtl/power_manager.sv
-
-确认：
-
-core_sleep_i 会参与 power-off sequence 的启动条件。
-
-相关条件中可以看到：
-
-(reg2hw.power_gate_core.q && core_sleep_i)
+WFI 是使 CPU 进入等待状态的一种指令，而 `core_sleep_o` 是 CPU 根据自身当前状态产生的睡眠指示信号。
 
 因此：
 
-core_sleep = 1
+`WFI`
 
-并不意味着：
+和：
 
-CPU 电源立即关闭。
+`core_sleep_o`
 
-Power Manager 还需要结合：
+不是同一个信号。
 
-power_gate_core
+---
 
-以及其他 force 控制信号决定具体的电源操作。
+## 6. `core_busy_o` 的来源
 
-============================================================
-十二、搜索 idle_enter / idle_exit
+文件：
 
-使用命令：
+`hw/vendor/openhwgroup/cv32e20/rtl/cve2_core.sv`
 
-grep -RniE "idle_enter|idle_exit" hw sw tb --exclude-dir=vendor --exclude-dir=.git | head -100
+可以看到：
 
-结果：
+`assign core_busy_o = ctrl_busy | if_busy | lsu_busy;`
 
-没有找到现成的 idle_enter 信号。
+因此：
 
-没有找到现成的 idle_exit 信号。
+`core_busy_o = ctrl_busy OR if_busy OR lsu_busy`
 
-============================================================
-十三、第一阶段接口建议
+可以简单理解为：
 
-建议暂时不要修改 CV32E20 CPU 内核。
+* `ctrl_busy`：控制器相关工作
+* `if_busy`：取指相关工作
+* `lsu_busy`：Load/Store Unit 相关工作
 
-可以在 CPU 外部观察：
+当这些模块都没有工作时，CPU 更容易满足进入 sleep 状态的条件。
 
+---
+
+## 7. `core_sleep_o` 在 SoC 中的传递路径
+
+### 7.1 CPU 子系统
+
+文件：
+
+`hw/core-v-mini-mcu/cpu_subsystem.sv`
+
+CPU 子系统存在：
+
+`core_sleep_o`
+
+并连接到 CV32E20 Wrapper。
+
+### 7.2 XIF Wrapper
+
+文件：
+
+`hw/core-v-mini-mcu/cve2_xif_wrapper.sv`
+
+Wrapper 内部实例化 CV32E20，并将 CV32E20 的 `core_sleep_o` 向外传递。
+
+因此主要路径为：
+
+```
+CV32E20
+   ↓
+cve2_xif_wrapper
+   ↓
+cpu_subsystem
+```
+
+### 7.3 SoC 顶层
+
+文件：
+
+`hw/core-v-mini-mcu/core_v_mini_mcu.sv`
+
+其中存在：
+
+`logic core_sleep`
+
+并形成类似：
+
+```
+cpu_subsystem_i.core_sleep_o
+        ↓
+    core_sleep
+        ↓
+ao_peripheral_subsystem_i.core_sleep_i
+```
+
+因此整体传递路径可以表示为：
+
+```
+CV32E20
+   │
+   │ core_sleep_o
+   ↓
+cpu_subsystem
+   │
+   ↓
 core_sleep
+   │
+   ↓
+ao_peripheral_subsystem
+```
 
-并保存上一周期的：
+---
 
-core_sleep_d
+## 8. Power Manager 如何使用 `core_sleep`
 
-推荐：
+文件：
 
-idle_enter = core_sleep & ~core_sleep_d
+`hw/ip/power_manager/rtl/power_manager.sv`
 
-idle_exit = ~core_sleep & core_sleep_d
+Power Manager 中存在：
 
-含义：
+`input logic core_sleep_i`
 
-core_sleep：
+其低功耗控制逻辑会将 `core_sleep_i` 与自身的控制条件结合。
 
-当前 CPU 是否处于 sleep 状态。
+例如源码中存在类似：
 
-core_sleep_d：
+`(reg2hw.power_gate_core.q && core_sleep_i)`
 
-上一周期 CPU 是否处于 sleep 状态。
+这样的判断条件。
 
-当：
+因此可以确认：
 
-上一周期 = 0
-当前周期 = 1
+`core_sleep`
 
-表示 CPU 刚刚进入 idle：
+会被 Power Manager 用于判断 CPU 是否已经进入适合进一步执行低功耗控制的状态。
 
-idle_enter = 1
+但是：
 
-当：
+> `core_sleep` 本身并不意味着 CPU 只要变成 1 就立即关电。真正进入更深层低功耗状态还需要结合 Power Manager 自身的控制寄存器和状态机。
 
-上一周期 = 1
-当前周期 = 0
+因此，对于后续项目设计，可以把 `core_sleep` 理解为：
 
-表示 CPU 刚刚退出 idle：
+> **CPU 当前已经进入空闲/睡眠状态的一个重要硬件状态信号。**
 
-idle_exit = 1
+---
 
-============================================================
-十四、第一阶段结论
+## 9. 中断如何唤醒 CPU
 
-已经确认：
+在 Controller 的 `SLEEP` 状态中，可以看到：
 
-WFI
-→ WFI Decode
-→ cve2_controller
-→ FLUSH
-→ WAIT_SLEEP
-→ SLEEP
-→ core_busy 下降
-→ clock_en 下降
-→ core_sleep_o = 1
-→ core_sleep
-→ Power Manager
+`if (irq_nm_i || irq_pending_i || debug_req_i || debug_mode_q || debug_single_step_i) begin`
 
-Wake-up：
+`    ctrl_fsm_ns = FIRST_FETCH;`
 
+`end`
+
+因此可以表示为：
+
+```
 SLEEP
-→ 中断/调试事件
-→ FIRST_FETCH
-→ 重新取指
-→ core_sleep 下降
+  │
+  ├── 没有唤醒事件
+  │       ↓
+  │     继续 SLEEP
+  │
+  └── irq_pending / NMI / debug request
+          ↓
+       FIRST_FETCH
+          ↓
+       CPU 恢复取指
+```
 
-============================================================
-十五、当前工作边界
+这里需要注意：
 
-本阶段完成：
+> `irq_pending_i` 表示存在待处理的中断请求，是 CPU 从 SLEEP 状态退出的重要条件之一；它不能简单等同于“已经开始执行中断服务程序”。
 
-WFI 软件入口搜索。
-WFI 硬件处理路径搜索。
-core_sleep_o 产生位置确认。
-core_sleep SoC 传播路径确认。
-Wake-up 路径确认。
-idle_enter / idle_exit 是否存在的搜索。
-后续接口定义建议。
+真正的中断处理还涉及 CPU 的中断使能状态以及后续的中断处理流程。
 
-本阶段暂时不做：
+---
 
-修改 CV32E20。
-修改 CPU 内部 RTL。
-实现 Idle Monitor。
-实现 Dirty Tracker。
-实现 Checkpoint Controller。
-实现动态睡眠决策。
+## 10. `idle_enter` 与 `idle_exit` 建议
 
-注意：
+在第一阶段的要求下，不修改 CV32E20 CPU 内核。
 
-本阶段主要通过源码分析确认路径。
+当前源码搜索中没有直接发现：
 
-目前不能把这些结果表述为“已经完成波形仿真验证”。
+`idle_enter`
 
-如果后续需要，可以再通过 Verilator 仿真观察：
+`idle_exit`
 
+因此，可以考虑在 CPU 子系统外部根据：
+
+`core_sleep`
+
+生成进入和退出睡眠的事件脉冲。
+
+假设：
+
+`logic core_sleep_d;`
+
+`always_ff @(posedge clk) begin`
+
+`    core_sleep_d <= core_sleep;`
+
+`end`
+
+则：
+
+`assign idle_enter = core_sleep & ~core_sleep_d;`
+
+`assign idle_exit  = ~core_sleep & core_sleep_d;`
+
+其含义为：
+
+### 进入睡眠
+
+```
+上一拍 core_sleep = 0
+当前 core_sleep = 1
+        ↓
+idle_enter = 1
+```
+
+### 退出睡眠
+
+```
+上一拍 core_sleep = 1
+当前 core_sleep = 0
+        ↓
+idle_exit = 1
+```
+
+因此：
+
+```
+core_sleep：0 → 1
+        ↓
+    idle_enter
+
+core_sleep：1 → 0
+        ↓
+    idle_exit
+```
+
+这两个信号可以作为后续 Idle Monitor 的接口。
+
+---
+
+## 11. 本阶段最终确认的完整路径
+
+综合源码搜索结果，可以得到以下主要路径。
+
+### 11.1 WFI → SLEEP
+
+```
+软件
+  ↓
+wait_for_interrupt()
+  ↓
+asm volatile("wfi")
+  ↓
+WFI 指令
+  ↓
+wfi_insn_dec
+  ↓
+wfi_insn_i
+  ↓
+Controller
+  ↓
+special request
+  ↓
+FLUSH
+  ↓
+WAIT_SLEEP
+  ↓
+SLEEP
+```
+
+### 11.2 SLEEP → 唤醒
+
+```
+SLEEP
+  ↓
+检测 irq_pending / NMI / debug request
+  ↓
+FIRST_FETCH
+  ↓
+CPU 恢复取指
+```
+
+### 11.3 CPU → SoC
+
+```
+CV32E20
+  ↓
+core_sleep_o
+  ↓
+cpu_subsystem
+  ↓
 core_sleep
+  ↓
+ao_peripheral_subsystem / power_manager
+```
 
-以及：
+### 11.4 后续 Idle Monitor 接口
 
-idle_enter
-idle_exit
+```
+core_sleep
+    ↓
+边沿检测
+    ├── 0 → 1：idle_enter
+    └── 1 → 0：idle_exit
+```
 
-的实际波形变化。
+---
 
-============================================================
-十六、后续第二阶段衔接
+## 12. 对后续项目设计的意义
 
-后续可以基于：
+本阶段的源码分析为后续项目提供了一个比较明确的接口基础。
 
-idle_enter
-idle_exit
+后续如果需要实现 Idle Monitor，可以优先关注：
 
-记录 CPU 每次空闲持续的时间：
+`core_sleep`
 
-idle_enter
-→ 开始计数
-→ idle_exit
-→ 得到 idle_duration
+并在 CPU 子系统外部产生：
 
-然后将：
+`idle_enter`
 
-idle_duration
+`idle_exit`
 
-交给后续的：
+之后可以进一步在此基础上连接：
 
+```
+Idle Monitor
+      ↓
+Dirty Tracker
+      ↓
 Cost Estimator
+      ↓
 Mode Selector
+      ↓
 Checkpoint Controller
+```
 
-等模块使用。
+这样可以把“CPU 是否进入空闲状态”与后续的 Checkpoint、LIGHT sleep / DEEP-OFF 决策逻辑连接起来。
+
+---
+
+## 13. 本阶段工作边界
+
+### 已完成
+* [x] 软件 WFI 调用位置确认
+* [x] WFI 到 CV32E20 Controller 的路径确认
+* [x] `FLUSH → WAIT_SLEEP → SLEEP` 状态路径确认
+* [x] `core_sleep_o` 产生位置确认
+* [x] `core_busy_o` 来源确认
+* [x] `core_sleep_o → core_sleep` 的 SoC 传递路径确认
+* [x] Power Manager 对 `core_sleep` 的使用方式确认
+* [x] SLEEP 状态下的中断/调试唤醒条件确认
+* [x] `idle_enter` / `idle_exit` 生成方案提出
+### 本阶段暂不完成
+* [ ] Idle Monitor RTL 实现
+* [ ] Dirty Tracker RTL 实现
+* [ ] 修改 CV32E20 CPU 内核
+* [ ] 完整的中断来源分类
+* [ ] 完整的 WFI → SLEEP → WAKEUP 波形验证
+* [ ] 深度低功耗状态机重新设计
+---
+## 14. 最终结论
+
+本阶段已经从源码层面确认了 X-HEEP + CV32E20 中 WFI、CPU Sleep 和唤醒的主要路径：
+
+```
+wait_for_interrupt()
+        ↓
+WFI
+        ↓
+wfi_insn_dec
+        ↓
+wfi_insn_i
+        ↓
+special request
+        ↓
+FLUSH
+        ↓
+WAIT_SLEEP
+        ↓
+SLEEP
+```
+
+CPU 在睡眠状态下检测到中断、NMI 或调试请求后，可以从：
+`SLEEP`
+转向：
+`FIRST_FETCH`
+并恢复取指。
+同时，CPU 根据自身运行状态产生：
+`core_sleep_o`
+该信号经过 SoC 向上层传递为：
+`core_sleep`
+并被 Power Manager 等低功耗相关模块使用。
+因此，后续设计可以在不修改 CV32E20 CPU 内核的前提下，以 `core_sleep` 作为 CPU 空闲状态的重要观察信号，并进一步生成：
+`idle_enter`
+`idle_exit`
+作为后续 Idle Monitor、Dirty Tracker 和低功耗模式决策模块的接口。
+
+> **本阶段结论主要来自 X-HEEP 源码路径分析，尚未通过完整 RTL 波形仿真验证。后续可以通过 Verilator 仿真进一步验证 WFI → SLEEP → WAKEUP 的实际时序。**
