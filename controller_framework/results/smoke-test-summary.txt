@@ -1,0 +1,15 @@
+SRTP controller framework smoke test
+Date: 2026-11-07
+Environment: ghcr.io/x-heep/x-heep/x-heep-toolchain:v1.0.6
+Simulator: Verilator 5.040
+Top module: tb_srtp_controller_top
+Result: PASS
+Simulation finish time: 105 ns
+
+Verified behaviors:
+1. A first write to a region increments modified_count.
+2. A repeated write within the same region does not increment modified_count.
+3. A write to a different region increments modified_count.
+4. checkpoint_cycles changes with modified_count.
+5. KEEP, LIGHT and DEEP_OFF selections are reachable.
+6. checkpoint_done clears the modification record.
